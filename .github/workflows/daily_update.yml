@@ -1,0 +1,42 @@
+name: Daily Dashboard Update
+
+on:
+  schedule:
+    # GitHub 使用的是 UTC 时间，北京时间晚 7 点 (19:00) 对应 UTC 的 11:00
+    - cron: '0 11 * * *'
+  workflow_dispatch: # 允许你随时手动点击运行
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    # 给予机器人提交代码的权限，这样它才能把生成的网页传上来
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          
+      - name: Install dependencies
+        run: |
+          pip install requests openai markdown pytz
+          
+      - name: Run Agent Script
+        env:
+          # 从 GitHub 安全凭证中读取 API Key
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+        run: python main.py
+        
+      - name: Commit and Push HTML
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          # 如果内容有变化则提交并推送
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update daily dashboard" && git push)
