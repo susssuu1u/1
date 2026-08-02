@@ -2,10 +2,10 @@ import os
 import requests
 from openai import OpenAI
 import markdown
-from datetime import datetime, timedelta
+from datetime import datetime
 import pytz
 
-# 1. 多源抓取模块 (带容错机制)
+# 1. 多源抓取模块 (保持不变)
 def fetch_news():
     print("正在抓取全网最新资讯...")
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
@@ -14,9 +14,10 @@ def fetch_news():
         "罗戈网": "https://www.headscm.com/Fingertip/alerts.html",
         "电商报": "https://www.dsb.cn/news",
         "中国物流与采购网": "http://www.chinawuliu.com.cn/zixun/node_524.shtml",
+        "亿邦动力(电商)": "https://www.ebrun.com/",
         "物流指闻": "https://www.wlzww.com/",
-        "中华人民共和国国家发展和改革委员会":"https://www.ndrc.gov.cn/",
-        "中国消费观察网":"http://www.btschina.cn/zixun/"
+        "中国消费观察网":"http://www.btschina.cn/zixun/",
+        "赢商网(华南)": "http://news.winshang.com/list-11.html"
     }
     
     combined_text = ""
@@ -33,7 +34,7 @@ def fetch_news():
             
     return combined_text
 
-# 2. 调用大脑进行结构化生成 (全面升级 Prompt)
+# 2. 调用大脑进行结构化生成 (注入导读与前瞻评价指令)
 def analyze_and_generate(crawled_text):
     print("正在进行深度分析与排版...")
     client = OpenAI(
@@ -49,46 +50,50 @@ def analyze_and_generate(crawled_text):
     请根据抓取到的全网素材，结合你的知识库，输出今日的情报内参。
 
     【排版与内容强制要求】
-    不要使用任何 Markdown 表格。全部使用具有层级感的无序列表和加粗字体。
+    不要使用表格。严格使用 Markdown 的引用语法 (>) 来呈现 AI 导读，使用无序列表呈现新闻。
     
     # 🌐 行业风向标 ｜ {today_str}
     
+    > **🌟 今日insight**：[请用 1-2 句话，高度浓缩今天全网资讯中最震撼、最需要关注的战略级异动、趋势或宏观拐点。必须犀利、直击要害。]
+
     ## 🗞️ 一、 行业最新资讯
-    (请严格分为下面三个子模块，跨渠道去重，总数控制在 10 条以内。每条内容必须包含足够的业务细节、数据和逻辑，需要将内容做提炼。商流动态关注零售新零售、电商发展、新模式发展；物流与供应链关注物流。供应链行业的新动态、仓库或运输模式、新库存模式等)
     
-    ### 🛒 商流动态
+    ### 🛒 1. 商流动态
+    > **🤖 AI 导读**：[一句话提炼今日商流板块的核心逻辑，例如：前端价格战加剧，品牌方加速寻找下沉增量]
     - **【主题-标题】**
       [详细资讯内容，保留核心数据和业务动作]
-      [🔗 原文](提取出的实际URL)
+      [🔗原文](提取出的实际URL)
       
-    ### 🚚 物流与供应链
+    ### 🚚 2. 物流与供应链
+    > **🤖 AI 导读**：[一句话提炼今日物流板块的核心博弈点或打法，例如：头部企业通过数字化手段强压干线成本]
     - **【主题-标题】**
       [详细资讯内容，保留核心数据和业务动作]
-      [🔗 原文](提取出的实际URL)
+      [🔗原文](提取出的实际URL)
+
+    ### 🌴 3. 华南专属
+    > **🤖 AI 导读**：[一句话提炼今日大湾区或本地商业的焦点]
+    - **【主题-标题】**
+      [详细资讯内容]
+      [🔗原文](提取出的实际URL)
       
-    ### 📜 宏观风向
+    ### 📜 4. 政策与宏观风向
+    > **🤖 AI 导读**：[一句话提炼政策释放的红利或监管信号]
     - **【主题-标题】**
-      [详细资讯内容，保留核心数据和业务动作]
-      [🔗 原文](提取出的实际URL)
+      [详细资讯内容]
+      [🔗原文](提取出的实际URL)
 
     ## 📈 二、 宏观大盘与相关指数
-    (请自动抓取或结合知识库输出当前最新的核心大盘数据。有什么重要数据就输出什么，覆盖：仓储指数、物流指数、社零消费、医药冷链/大件指数、运输运价等)
-    (格式如下，请严格保持：)
-    - **[指数名称，如：7月中国公路物流运价指数]**：**[数值/趋势，如：102.4点，环比回落]**。
-      *解读*：[结合实际环境，用一句话点评该数据的意义]
-    - (以此类推，输出 4-6 个核心关键指数)
+    (输出当前最新的核心大盘数据。覆盖：仓储指数、物流指数、社零消费、医药冷链/大件指数、运价等)
+    - **[指数名称]**：**[数值/趋势]**。*战略解读*：[一句话点评该数据的意义]
+    - (输出 4-6 个核心关键指数)
 
-    ## 🧠 三、 今日AI总结与分析
-    (结合今日所有信息，站在物流/供应链总监的视角输出)
-    
-    ### 💡 行业洞察
-    (用一段话，深度穿透今天的繁杂信息，提炼出底层商业规律或趋势)
-    
-    ### 🎯 发力与关注点
-    - (列出 2-3 个接下来最值得业务侧关注的机会点或风险点)
-    
-    ### 🏗️ AI启示
-    - (针对仓网布局、降本增效、自动化投入、运力采购等具体的供应链规划环节，给出 2-3 条极具实操性的破局思考或建议)
+    ## 🧠 三、 AI总结与思考
+    ### 💡 今日行业洞察
+    (用一段话深度穿透底层商业规律)
+    ### 🎯 重点发力与关注点
+    - (列出 2-3 个最值得业务侧关注的机会点或风险点)
+    ### 🏗️ 一点思考
+    - (针对仓网布局、降本增效等，给出 2-3 条实操性建议)
     """
     
     response = client.chat.completions.create(
@@ -97,16 +102,15 @@ def analyze_and_generate(crawled_text):
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": f"今日原始素材：\n{crawled_text}"}
         ],
-        temperature=0.4
+        temperature=0.6 # 适度调高一点温度，让 AI 的“评价”和“思考”更加锐利有深度
     )
     return response.choices[0].message.content
 
-# 3. 生成自适应卡片式网页 (注入高级 CSS)
+# 3. 生成自适应网页 (重写引用块样式，打造高亮 UI)
 def generate_html(md_content):
     print("正在生成现代化响应式网页...")
     html_body = markdown.markdown(md_content)
     
-    # 全新自适应卡片 UI
     full_html = f"""
     <!DOCTYPE html>
     <html lang="zh-CN">
@@ -116,7 +120,7 @@ def generate_html(md_content):
         <title>战略情报指挥台</title>
         <style>
             :root {{
-                --bg: #f4f7f6;
+                --bg: #f3f4f6;
                 --card-bg: #ffffff;
                 --primary: #2563eb;
                 --text-main: #1f2937;
@@ -132,41 +136,51 @@ def generate_html(md_content):
                 margin: 0 auto;
                 padding: 20px;
             }}
-            /* 大标题优化 */
-            h1 {{ text-align: center; font-size: 1.8rem; color: #111827; margin-bottom: 40px; }}
+            h1 {{ text-align: center; font-size: 1.8rem; color: #111827; margin-bottom: 30px; }}
             
-            /* 二级标题 (模块分割) */
+            /* 【重点优化】AI 导读与思考的高亮样式 (Blockquote) */
+            blockquote {{
+                background-color: #f0fdf4; /* 浅清新的绿色背景 */
+                border-left: 5px solid #16a34a; /* 醒目的左侧粗边框 */
+                margin: 20px 0;
+                padding: 15px 20px;
+                border-radius: 0 8px 8px 0;
+                color: #166534;
+                font-size: 1.05rem;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            }}
+            blockquote strong {{
+                color: #15803d;
+                font-size: 1.1rem;
+            }}
+
             h2 {{
                 background: linear-gradient(90deg, #dbeafe 0%, transparent 100%);
                 color: #1e40af;
                 padding: 10px 15px;
                 border-left: 5px solid var(--primary);
                 border-radius: 4px;
-                margin-top: 50px;
+                margin-top: 40px;
                 font-size: 1.3rem;
             }}
             h3 {{ color: #374151; font-size: 1.1rem; border-bottom: 2px solid var(--border); padding-bottom: 8px; margin-top: 30px; }}
             
-            /* 魔法卡片化：将所有列表元素转为卡片 */
+            /* 新闻卡片样式 */
             ul {{ list-style: none; padding: 0; display: flex; flex-direction: column; gap: 16px; }}
             li {{
                 background-color: var(--card-bg);
                 border: 1px solid var(--border);
-                border-radius: 12px;
+                border-radius: 10px;
                 padding: 20px;
-                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
                 transition: transform 0.2s, box-shadow 0.2s;
             }}
             li:hover {{
                 transform: translateY(-2px);
-                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+                box-shadow: 0 8px 12px rgba(0, 0, 0, 0.08);
             }}
-            
-            /* 卡片内字体微调 */
             li strong {{ color: #111827; font-size: 1.05rem; display: block; margin-bottom: 8px; }}
             li p {{ margin: 0; color: var(--text-muted); }}
-            
-            /* 链接样式 */
             a {{
                 color: var(--primary);
                 text-decoration: none;
@@ -179,12 +193,11 @@ def generate_html(md_content):
                 font-size: 0.9rem;
             }}
             a:hover {{ background-color: #dbeafe; }}
-            
-            /* 手机端适配 */
             @media (max-width: 600px) {{
-                body {{ padding: 10px; }}
+                body {{ padding: 12px; }}
                 h1 {{ font-size: 1.5rem; }}
                 li {{ padding: 15px; }}
+                blockquote {{ font-size: 1rem; padding: 12px 15px; }}
             }}
         </style>
     </head>
